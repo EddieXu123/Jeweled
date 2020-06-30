@@ -6,7 +6,6 @@
  * between that button and its surroundings
  * @author Eddie Xu
  */
-
 // Imported javafx files
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -27,18 +26,19 @@ import javafx.scene.layout.CornerRadii;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.InputMismatchException;
+import java.lang.NumberFormatException;
 
 public class Jewels extends Application {
   
   // Field to create the gridPane
   private GridPane myGrid;
   // Field that creates the different types of buttons used
-  private int sqrN = 6;
+  private static int sqrN;
   // Field that creates a 2D array of buttons
   private Button[][] sqr;
   // Field that sets each button to one of four colors
   private Color[] color = new Color[]{
-    Color.PURPLE,Color.RED,Color.BLUE,Color.YELLOW, Color.ORANGE, Color.GREEN
+    Color.PURPLE, Color.RED,Color.BLUE,Color.YELLOW, Color.ORANGE, Color.GREEN
   };
   // Field that creates an instance of a CornerRadii
   private static CornerRadii rad = new CornerRadii(20); // Gives radius of tile
@@ -87,6 +87,9 @@ public class Jewels extends Application {
   
   /**
    * Method to check if result of swap produces 3 in a row horizontally
+   * @param bt2n The button that is initially selected and then swapped with a neighboring button
+   * @return int[]: The first index contains a 1 or 0, if the move was valid or not, the second
+   * index contains the index of the left-most button in that row with the same color
    */
   public int[] checkHorizontal(Button btn2) {
     int[] result = new int[3];
@@ -122,8 +125,26 @@ public class Jewels extends Application {
   }
   
   /**
+   * Helper method to see if two buttons are neighbors of each other
+   * @param b1, b2 The two buttons being tested
+   * @return boolean If the two buttons are neighbors
+   */
+  public boolean isNeighbors(Button b1, Button b2) {
+    // Two buttons are neighbors if:
+    if ((Math.abs(myGrid.getRowIndex(b1) - myGrid.getRowIndex(b2)) == 1 // They are 1 row apart
+       && myGrid.getColumnIndex(b1) == myGrid.getColumnIndex(b2)) // And in the same Column
+          || // OR
+        (Math.abs(myGrid.getColumnIndex(b1) - myGrid.getColumnIndex(b2)) == 1) // 1 Column apart
+       && myGrid.getRowIndex(b1) == myGrid.getRowIndex(b2)) return true; // And in the same row
+    
+    return false;
+  }
+  
+  /**
    * Method to check if the columns should be replaced
    * @param btn2 the location of the button that is being swapped into place
+   * @return int[] An array containing 3 pieces of information, if the move was valid or not,
+   * the bottom index of the column with the same color, and the top index of the column with the same color
    */
   public int[] checkVertical(Button btn2) {
     int[] result = new int[3];
@@ -151,6 +172,10 @@ public class Jewels extends Application {
     return result;
   }
   
+  /**
+   * Method to mark tiles that have been validly swapped with a "*" symbol
+   * @param Button the button that was initially selected on and swapped with a neighboring button
+   */
   public void markTiles(Button button) {
     int[] vert = checkVertical(button);
     int[] horz = checkHorizontal(button);
@@ -159,8 +184,10 @@ public class Jewels extends Application {
       for (int i = (myGrid.getColumnIndex(button) - horz[1] + 1); i < (myGrid.getColumnIndex(button)) + horz[2]; i++) {
         if(sqr[i][myGrid.getRowIndex(button)].getText() != "*"){
           counter++;
-          if (counter == height * width) {
+          if (counter == (height * width)) {
             System.out.println("You won in " + steps + " steps!");
+            System.err.println(counter);
+            System.err.println(height * width);
             System.exit(0);
           }
         }
@@ -180,32 +207,34 @@ public class Jewels extends Application {
     }
     
     if (vert[0] == 1) {
-      int height = (vert[2] + vert[1]) - 1;
+      int colHeight = (vert[2] + vert[1]) - 1;
       int j = myGrid.getColumnIndex(button);
       // For loop that marks the stars and substitutes the other boxes.
       for (int i = (myGrid.getRowIndex(button)) + vert[1] - 1; i > (myGrid.getRowIndex(button)) - vert[2]; i--) {  
         // If statement that will draw stars
         if(sqr[myGrid.getColumnIndex(button)][i].getText() != "*"){
           this.counter++;
-          if (counter == height * width) {
-            System.out.println("You won in " + steps + " steps!");
+          if (counter == (height * width)) {
+            System.err.println("You won in " + steps + " steps!");
+            System.out.println(counter);
+            System.err.println(height * width);
             System.exit(0);
           }
         }
         sqr[myGrid.getColumnIndex(button)][i].setText("*");
         
         // If statement that checks for substitution 
-        if(i-height < 0){
+        if(i-colHeight < 0){
           Color c = color[new Random().nextInt(sqrN)];
           Jewels.setButtonColor(c, sqr[j][i]);
         }
         else{
-          Jewels.setButtonColor(Jewels.getButtonColor(sqr[j][i-height]), sqr[j][i]);
+          Jewels.setButtonColor(Jewels.getButtonColor(sqr[j][i-colHeight]), sqr[j][i]);
         }
       }
       // Randomize all the new column colors
       // For loop that goes through the boxes and sets the colors to the new one
-      for(int k = 0; k <= height; k++) {
+      for(int k = 0; k <= colHeight; k++) {
         Color c = color[new Random().nextInt(sqrN)];
         Jewels.setButtonColor(c, sqr[j][k]);
       }
@@ -234,6 +263,8 @@ public class Jewels extends Application {
       // Remembering the original color of the buttons
       Color rmbColor1 = getButtonColor(btn1);
       Color rmbColor2 = getButtonColor(btn2);
+      // System.out.println(myGrid.getRowIndex(btn1) + ", " + myGrid.getColumnIndex(btn1));
+      // System.err.println(myGrid.getRowIndex(btn2) + ", " + myGrid.getColumnIndex(btn2));
       // Swapping the colors
       setButtonColor(rmbColor1, btn2);
       setButtonColor(rmbColor2, btn1);
@@ -245,8 +276,6 @@ public class Jewels extends Application {
     return true;
   }
   
-  
-  
   /**
    * Start method that creates the "Stage"
    * @param primaryStage the name of the Stage
@@ -256,7 +285,7 @@ public class Jewels extends Application {
     // Creating the grid pane and making the board height * width
     this.myGrid = new GridPane();
     this.sqr = new Button[height][width];
-
+    
     // for loop to go through each of the buttons (grids) of the board and filling them with a color
     for(int i = 0; i < height; i++){
       for(int j = 0; j < width; j++){
@@ -276,18 +305,25 @@ public class Jewels extends Application {
           // Tell if the second button is swappable with the first and see if they substitute when necessary
           else {
             b2 = (Button)(e.getSource());
+            // If the second button was the first one, reset
             if (b2 == b1) {
               isClicked = true;
               setButtonColor(rememberColor, b1);
             }
+            // Otherwise, the second button must be a neighbor and be a valid move in order to swap the two buttons
             else {
               isClicked = true;
               setButtonColor(rememberColor, b1);
-              swapButton(b1, b2);
-              if (checkVertical(b2)[0] != 1 && checkHorizontal(b2)[0] != 1) {
-                swapButton(b1, b2); // swap back
+              if (isNeighbors(b1, b2)) {
+                // System.out.println("Hello");
+                boolean neighbor = swapButton(b1, b2);
+                System.out.println(neighbor);
+                if (checkVertical(b2)[0] != 1 && checkHorizontal(b2)[0] != 1) {
+                  swapButton(b1, b2); // swap back
+                  System.err.println("Illegal move!");
+                }
+                markTiles(b2);
               }
-              markTiles(b2);
             }
           }
           
@@ -310,27 +346,59 @@ public class Jewels extends Application {
   /**
    * The method to launch the program.
    * @param args The command line arguments. The arguments are passed on to the JavaFX application.
+   * @param args Height, Width, number of colors
    */
-  public static void main(String[] args) throws InputMismatchException {
-    boolean validInput = true;
-    while (validInput) {
+  public static void main(String[] args) throws InputMismatchException, NumberFormatException {
+    // 4 Variables to keep track of if the inputs to run the program are valid
+    boolean checkValid = true;
+    boolean validWidth = true;
+    boolean validHeight = true;
+    boolean validColor = true;
+    
+    while (checkValid) {
       try {
-        System.out.println("What is the preferred height of your board? (Please keep it between 8-20 for the best experience!)");
-        Scanner scan2 = new Scanner(System.in);
-        height = scan2.nextInt();
-        if (height < 8 || height > 20) throw new InputMismatchException();
-        System.out.println("What is the preferred width of your board? (Please keep it between 8-20 for the best experience!)");
-        Scanner scan = new Scanner(System.in);
-        width = scan.nextInt();
-        if (width < 8 || width > 20) throw new InputMismatchException();
-        validInput = false;
+        // Until we have a valid width entered, keep running this loop
+        while (validWidth) {
+          System.out.println("What is the preferred width of your board? (Please keep it between 8-20 for the best experience!)");
+          Scanner scan2 = new Scanner(System.in);
+          height = scan2.nextInt();
+          if (height < 8 || height > 20) throw new InputMismatchException(); // Too large or small
+          validWidth = false; // Exit this loop
+        }
+        // Until we have a valid width entered, keep running this loop
+        while (validHeight) {
+          System.out.println("What is the preferred height of your board? (Please keep it between 8-20 for the best experience!)");
+          Scanner scan = new Scanner(System.in);
+          width = scan.nextInt();
+          if (width < 8 || width > 20) throw new InputMismatchException(); // Too large or small
+          validHeight = false; // Exit loop
+        }
+        // Until we have a valid color # entered, keep running this loop
+        while (validColor) {
+          System.out.println("How many different tile colors would you like? (Please pick a number between 4-6)");
+          Scanner scan3 = new Scanner(System.in);
+          sqrN = scan3.nextInt();
+          if (sqrN < 4 || sqrN > 6) throw new NumberFormatException(); // To large or small
+          validColor = false; // Exit loop
+        }
+        checkValid = false; // Exit entire loop. Now, we have our valid 3 entries
       }
+      
+      // If there's an incorrect dimension given
       catch (InputMismatchException e) {
         System.out.println("Please enter a number between 8 and 20!");
       }
+      
+      // If there's an incorrect number of colors given
+      catch (NumberFormatException n) {
+        System.out.println("Please enter a number between 4 and 6!");
+      }
     }
+    
+    // Launch the program
     Application.launch(args);
   }
+  
   /** A static nested class that is an action listener that rotates the button clicked */
   private static class ProcessClick implements EventHandler<ActionEvent> {
     
@@ -339,7 +407,6 @@ public class Jewels extends Application {
       */
     public void handle(ActionEvent e) {
       Button b = (Button)e.getSource();
-      System.out.println("You clicked Button 1");
     }
   } 
 }
