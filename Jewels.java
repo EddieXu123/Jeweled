@@ -93,7 +93,6 @@ public class Jewels extends Application {
    */
   public int[] checkHorizontal(Button btn2) {
     int[] result = new int[3];
-    steps++;
     
     /**
      * While loop that starts with one button and looks to the left and right of that button
@@ -179,6 +178,7 @@ public class Jewels extends Application {
   public void markTiles(Button button) {
     int[] vert = checkVertical(button);
     int[] horz = checkHorizontal(button);
+    steps++;
     
     if (horz[0] == 1) {   
       for (int i = (myGrid.getColumnIndex(button) - horz[1] + 1); i < (myGrid.getColumnIndex(button)) + horz[2]; i++) {
@@ -186,8 +186,6 @@ public class Jewels extends Application {
           counter++;
           if (counter == (height * width)) {
             System.out.println("You won in " + steps + " steps!");
-            System.err.println(counter);
-            System.err.println(height * width);
             System.exit(0);
           }
         }
@@ -216,8 +214,6 @@ public class Jewels extends Application {
           this.counter++;
           if (counter == (height * width)) {
             System.err.println("You won in " + steps + " steps!");
-            System.out.println(counter);
-            System.err.println(height * width);
             System.exit(0);
           }
         }
@@ -263,8 +259,6 @@ public class Jewels extends Application {
       // Remembering the original color of the buttons
       Color rmbColor1 = getButtonColor(btn1);
       Color rmbColor2 = getButtonColor(btn2);
-      // System.out.println(myGrid.getRowIndex(btn1) + ", " + myGrid.getColumnIndex(btn1));
-      // System.err.println(myGrid.getRowIndex(btn2) + ", " + myGrid.getColumnIndex(btn2));
       // Swapping the colors
       setButtonColor(rmbColor1, btn2);
       setButtonColor(rmbColor2, btn1);
@@ -313,16 +307,19 @@ public class Jewels extends Application {
             // Otherwise, the second button must be a neighbor and be a valid move in order to swap the two buttons
             else {
               isClicked = true;
+              boolean mark = true;
               setButtonColor(rememberColor, b1);
               if (isNeighbors(b1, b2)) {
-                // System.out.println("Hello");
-                boolean neighbor = swapButton(b1, b2);
-                System.out.println(neighbor);
+                swapButton(b1, b2);
                 if (checkVertical(b2)[0] != 1 && checkHorizontal(b2)[0] != 1) {
+                  mark = false;
                   swapButton(b1, b2); // swap back
                   System.err.println("Illegal move!");
                 }
-                markTiles(b2);
+                if (mark) {
+                  markTiles(b2);
+                  System.out.println(steps);
+                }
               }
             }
           }
